@@ -1,6 +1,7 @@
 #include "msm/miner.h"
 
 #include "msm/land.h"
+#include "msm/land_viewer.h"
 #include "msm/observer.h"
 
 #include <unordered_set>
@@ -17,11 +18,8 @@ public:
     Result<Void> Dig(const Location & location) override;
     Result<Void> Flag(const Location & location, bool flag) override;
 
-    Result<std::unique_ptr<Land>> GetLandView() const override;
-    // Result<bool> IsDigged(const Location & location) const override;
-
-    // Result<Size> GetNeighborsMineCount(const Location & location) const override;
-    // Result<std::unique_ptr<LocationViewer>> GetAllLocations() const override;
+    Result<std::unique_ptr<LandViewer>> GetLandViewer() const override;
+    Result<MinerStatus> CheckStatus() const override;
 
 private:
     std::unique_ptr<Land> _land;
@@ -41,40 +39,31 @@ Result<Void>
 MinerImpl::Dig(const Location & location)
 {
     const bool hasMine = VALUE_OR_RETURN(_land->HasMine(location));
-    _digged.insert(location);
-    _observer->OnDig(location, VALUE_OR_RETURN(land::GetNeighborsMineCount(*_land, location)), hasMine);
+    VALUE_OR_RETURN(_land->SetDig(location, true));
+    _observer->OnDig(location, VALUE_OR_RETURN(_land->GetNeighborsMineCount(location)), hasMine);
     return VOID;
 }
 
 Result<Void>
 MinerImpl::Flag(const Location & location, bool flag)
 {
-    // TODO
+    VALUE_OR_RETURN(_land->SetFlag(location, flag));
+    _land->SetFlag(location, flag);
+    return VOID;
 }
 
-Result<std::unique_ptr<Land>>
-MinerImpl::GetLandView() const
+Result<std::unique_ptr<LandViewer>>
+MinerImpl::GetLandViewer() const
 {
-    // XXX LandView instead
+    return land_viewer::New(*_land);
 }
 
-// Result<bool>
-// MinerImpl::IsDigged(const Location & location) const
-// {
-//     return _digged.find(location) != _digged.end();
-// }
-// 
-// Result<Size>
-// MinerImpl::GetNeighborsMineCount(const Location & location) const
-// {
-//     return land::GetNeighborsMineCount(*_land, location);
-// }
-// 
-// Result<std::unique_ptr<LocationViewer>>
-// MinerImpl::GetAllLocations() const
-// {
-//     return _land->GetAllLocations();
-// }
+Result<MinerStatus>
+MinerImpl::CheckStatus() const
+{
+    // TODO
+    return MinerStatus::UNDETERMINED;
+}
 
 } // namespace
 

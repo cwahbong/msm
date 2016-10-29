@@ -7,7 +7,7 @@
 
 namespace msm {
 
-class Land;
+class LandViewer;
 
 enum class ActionType {
     DIG,
@@ -25,7 +25,7 @@ class MSM_EXPORT Agent {
 public:
     virtual ~Agent() = 0;
 
-    virtual Result<Action> GenAction(const Land &) noexcept = 0;
+    virtual Action GenAction(const LandViewer &) noexcept = 0;
 };
 
 } // namespace msm

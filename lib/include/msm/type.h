@@ -13,6 +13,8 @@ using Axis = int_least64_t;
 
 struct MSM_EXPORT Location {
     Axis x, y;
+
+    Location(): x(0), y(0) {}
 };
 
 inline bool operator==(const Location & lhs, const Location & rhs)

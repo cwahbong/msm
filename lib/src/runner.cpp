@@ -2,6 +2,7 @@
 
 #include "msm/agent.h"
 #include "msm/land.h"
+#include "msm/land_viewer.h"
 #include "msm/miner.h"
 #include "msm/observer.h"
 
@@ -34,7 +35,7 @@ Result<Void>
 RunnerImpl::Run()
 {
     while (true) {
-        auto action = VALUE_OR_RETURN(_agent->GenAction(*VALUE_OR_RETURN(_miner->GetLandView())));
+        const auto action = _agent->GenAction(*VALUE_OR_RETURN(_miner->GetLandViewer()));
         switch(action.type) {
         case ActionType::DIG:
             VALUE_OR_RETURN(_miner->Dig(action.location));
@@ -46,8 +47,17 @@ RunnerImpl::Run()
             VALUE_OR_RETURN(_miner->Flag(action.location, false));
             break;
         case ActionType::END:
-            // _observer->OnEnd();
             return VOID;
+        }
+        switch(VALUE_OR_RETURN(_miner->CheckStatus())) {
+        case MinerStatus::WIN:
+            _observer->OnEnd(true);
+            return VOID;
+        case MinerStatus::LOSE:
+            _observer->OnEnd(false);
+            return VOID;
+        case MinerStatus::UNDETERMINED:
+            break;
         }
     }
     return VOID;

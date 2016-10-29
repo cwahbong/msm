@@ -10,20 +10,25 @@
 namespace msm {
 
 class Land;
+class LandViewer;
 class LocationViewer;
 class Observer;
+
+enum class MinerStatus {
+    WIN,
+    LOSE,
+    UNDETERMINED,
+};
 
 class MSM_EXPORT Miner {
 public:
     virtual ~Miner() = 0;
 
-    virtual Result<std::unique_ptr<Land>> GetLandView() const = 0;
-
     virtual Result<Void> Dig(const Location & location) = 0;
     virtual Result<Void> Flag(const Location & location, bool flag) = 0;
 
-    // virtual Result<Size> GetNeighborsMineCount(const Location & location) const = 0;
-    // virtual Result<std::unique_ptr<LocationViewer>> GetAllLocations() const = 0;
+    virtual Result<std::unique_ptr<LandViewer>> GetLandViewer() const = 0;
+    virtual Result<MinerStatus> CheckStatus() const = 0;
 };
 
 namespace miner {

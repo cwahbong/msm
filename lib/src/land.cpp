@@ -10,6 +10,7 @@ struct Cell {
     bool mine;
     bool flag;
     bool dig;
+    Size neighbors_mine_count;
 };
 
 class SquareLand: public Land {
@@ -21,10 +22,14 @@ public:
 
     Result<Void> SetMine(const Location & location, bool isMine) override;
     Result<bool> HasMine(const Location & location) const override;
-    Result<Void> SetFlag(const Location & location, bool flag) override;
-    Result<Void> SetDig(const Location & location, bool digged) override;
 
-    Result<CellView> View(const Location & location) const override;
+    Result<Void> SetFlag(const Location & location, bool flag) override;
+    Result<bool> HasFlag(const Location & location) const override;
+
+    Result<Void> SetDig(const Location & location, bool digged) override;
+    Result<bool> IsDigged(const Location & location) const override;
+
+    Result<Size> GetNeighborsMineCount(const Location & location) const override;
 
     Result<std::unique_ptr<LocationViewer>> GetAllLocations() const override;
     Result<std::unique_ptr<LocationViewer>> GetNeighbors(const Location & location) const override;
@@ -41,7 +46,7 @@ SquareLand::SquareLand(Size row, Size col):
     Land(),
     _row(row),
     _col(col),
-    _cell(row, std::vector<Cell>(col, Cell{.mine = false, .flag = false, .dig = false}))
+    _cell(row, std::vector<Cell>(col, Cell{.mine = false, .flag = false, .dig = false, .neighbors_mine_count = 0}))
 {}
 
 SquareLand::~SquareLand() = default;
@@ -57,6 +62,7 @@ SquareLand::SetMine(const Location & location, bool is_mine)
 {
     VALUE_OR_RETURN(ValidateLocation(location));
     _cell[location.y][location.x].mine = is_mine;
+    // TODO update neighbor count
     return VOID;
 }
 
@@ -75,6 +81,13 @@ SquareLand::SetFlag(const Location & location, bool flag)
     return VOID;
 }
 
+Result<bool>
+SquareLand::HasFlag(const Location & location) const
+{
+    VALUE_OR_RETURN(ValidateLocation(location));
+    return _cell[location.y][location.x].flag;
+}
+
 Result<Void>
 SquareLand::SetDig(const Location & location, bool digged)
 {
@@ -83,16 +96,39 @@ SquareLand::SetDig(const Location & location, bool digged)
     return VOID;
 }
 
-Result<CellView>
-SquareLand::View(const Location & location) const
+Result<bool>
+SquareLand::IsDigged(const Location & location) const
 {
     VALUE_OR_RETURN(ValidateLocation(location));
-    return CellView {
-        .digged = _cell[location.y][location.x].dig,
-        .has_mine = _cell[location.y][location.x].mine,
-        .neighbors_mine_count = 5
-    };
+    return _cell[location.y][location.x].dig;
 }
+
+Result<Size>
+SquareLand::GetNeighborsMineCount(const Location & location) const
+{
+    VALUE_OR_RETURN(ValidateLocation(location));
+    return _cell[location.y][location.x].neighbors_mine_count;
+}
+
+// Result<CellView>
+// SquareLand::View(const Location & location) const
+// {
+//     VALUE_OR_RETURN(ValidateLocation(location));
+//     const auto & viewed_cell = _cell[location.y][location.x];
+//     if (viewed_cell.dig) {
+//         return CellView {
+//             .digged = viewed_cell.dig,
+//             .has_mine = viewed_cell.mine,
+//             .neighbors_mine_count = viewed_cell.neighbors_mine_count,
+//         };
+//     } else {
+//         return CellView {
+//             .digged = viewed_cell.dig,
+//             .has_mine = false,
+//             .neighbors_mine_count = 0,
+//         };
+//     }
+// }
 
 Result<std::unique_ptr<LocationViewer>>
 SquareLand::GetAllLocations() const
@@ -118,26 +154,9 @@ SquareLand::ValidateLocation(const Location & location) const
 
 } // namespace
 
-LandViewer::~LandViewer() = default;
-
 Land::~Land() = default;
 
 namespace land {
-
-Result<Size>
-GetNeighborsMineCount(const Land & land, const Location & location)
-{
-    Size count = 0;
-    const auto & neighbors = VALUE_OR_RETURN(land.GetNeighbors(location));
-    while (!VALUE_OR_RETURN(neighbors->End())) {
-        const auto neighbor = VALUE_OR_RETURN(neighbors->Next());
-        const bool isMine = VALUE_OR_RETURN(land.HasMine(neighbor));
-        if (isMine) {
-            count += isMine;
-        }
-    }
-    return count;
-}
 
 std::unique_ptr<Land>
 NewSquare(Size row, Size col)

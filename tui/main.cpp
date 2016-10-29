@@ -2,9 +2,12 @@
 #include <string>
 #include <memory>
 
+#include <msm/agent.h>
 #include <msm/land.h>
+#include <msm/land_viewer.h>
 #include <msm/miner.h>
 #include <msm/observer.h>
+#include <msm/runner.h>
 
 
 namespace {
@@ -16,29 +19,63 @@ enum class ExitStatus: int {
     MSM_ERROR,
 };
 
-class TuiObserver: public msm::Observer {
+class SquareTui: public msm::Observer, public msm::Agent {
 public:
+    SquareTui(std::istream &, std::ostream &);
+
     void OnDig(const msm::Location &, msm::Size, bool) noexcept override;
     void OnEnd(bool) noexcept override;
+
+    msm::Action GenAction(const msm::LandViewer &) noexcept override;
+
+private:
+    std::istream & _is;
+    std::ostream & _os;
 };
 
+SquareTui::SquareTui(std::istream & is, std::ostream & os):
+    _is(is),
+    _os(os)
+{}
+
 void
-TuiObserver::OnDig(const msm::Location & location, msm::Size n, bool hasMine) noexcept
+SquareTui::OnDig(const msm::Location & location, msm::Size n, bool hasMine) noexcept
 {
-    // TODO
+    if (hasMine) {
+        _os << "Location (" << location.x << ", " << location.y << ") has mine, bomb!" << std::endl;
+    } else {
+        _os << "Dig location (" << location.x << ", " << location.y << "), which is a number [" << n << "]" << std::endl;
+    }
 }
 
 void
-TuiObserver::OnEnd(bool win) noexcept
+SquareTui::OnEnd(bool win) noexcept
 {
+    _os << (win ? "Win" : "Lose") << std::endl;
+}
+
+msm::Action
+SquareTui::GenAction(const msm::LandViewer &) noexcept
+{
+    while (true) {
+        std::string line;
+        if (!getline(_is, line)) {
+            return msm::Action {
+                .type = msm::ActionType::END,
+                .location = msm::Location(),
+            };
+        }
+        // TODO parse line
+    }
 }
 
 ExitStatus
 square()
 {
-    std::unique_ptr<msm::Land> land = msm::land::NewSquare(5, 2);
-    // TODO init a new miner
-    msm::Result<msm::Void> result(msm::Error::OK);
+    auto land = msm::land::NewSquare(10, 12);
+    auto tui = std::make_shared<SquareTui>(std::cin, std::cout);
+    auto runner = msm::runner::New(std::move(land), tui, tui);
+    const auto result = runner->Run();
     if (result.IsError()) {
         std::cerr << "Msm internal error: " << static_cast<int>(result.GetError()) << '\n';
         return ExitStatus::MSM_ERROR;

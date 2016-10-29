@@ -49,7 +49,7 @@ public:
         if (_isError) {
             _error = other.GetError();
         } else {
-            _value = other.FetchValue();
+            _value = other.GetValue();
         }
     }
 
@@ -81,7 +81,7 @@ public:
         }
     }
 
-    ValueType FetchValue() {
+    ValueType && GetValue() {
         if (!_isError) {
             return std::move(_value);
         } else {
@@ -107,7 +107,7 @@ template <> class Result<void>;
         if (result.IsError()) { \
             return result.GetError(); \
         } \
-        result.FetchValue(); \
+        result.GetValue(); \
     })
 
 #endif //MSM__ERROR_H
