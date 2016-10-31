@@ -19,18 +19,20 @@ public:
     Result<Void> Flag(const Location & location, bool flag) override;
 
     Result<std::unique_ptr<LandViewer>> GetLandViewer() const override;
-    Result<MinerStatus> CheckStatus() const override;
+    Result<MinerStatus> GetStatus() const override;
 
 private:
     std::unique_ptr<Land> _land;
     std::shared_ptr<Observer> _observer;
     std::unordered_set<Location> _digged;
+    MinerStatus _minerStatus;
 };
 
 MinerImpl::MinerImpl(std::unique_ptr<Land> && land, std::shared_ptr<Observer> observer):
     _land(std::move(land)),
     _observer(observer),
-    _digged()
+    _digged(),
+    _minerStatus(MinerStatus::UNDETERMINED)
 {}
 
 MinerImpl::~MinerImpl() = default;
@@ -41,6 +43,13 @@ MinerImpl::Dig(const Location & location)
     const bool hasMine = VALUE_OR_RETURN(_land->HasMine(location));
     VALUE_OR_RETURN(_land->SetDig(location, true));
     _observer->OnDig(location, VALUE_OR_RETURN(_land->GetNeighborsMineCount(location)), hasMine);
+    if (_minerStatus == MinerStatus::UNDETERMINED) {
+        if (hasMine) {
+            _minerStatus = MinerStatus::LOSE;
+        } else if (false/* All safe is digged. */) {
+            _minerStatus = MinerStatus::WIN;
+        }
+    }
     return VOID;
 }
 
@@ -59,10 +68,9 @@ MinerImpl::GetLandViewer() const
 }
 
 Result<MinerStatus>
-MinerImpl::CheckStatus() const
+MinerImpl::GetStatus() const
 {
-    // TODO
-    return MinerStatus::UNDETERMINED;
+    return _minerStatus;
 }
 
 } // namespace

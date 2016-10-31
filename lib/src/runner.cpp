@@ -49,7 +49,7 @@ RunnerImpl::Run()
         case ActionType::END:
             return VOID;
         }
-        switch(VALUE_OR_RETURN(_miner->CheckStatus())) {
+        switch(VALUE_OR_RETURN(_miner->GetStatus())) {
         case MinerStatus::WIN:
             _observer->OnEnd(true);
             return VOID;

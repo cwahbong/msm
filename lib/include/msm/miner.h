@@ -28,7 +28,7 @@ public:
     virtual Result<Void> Flag(const Location & location, bool flag) = 0;
 
     virtual Result<std::unique_ptr<LandViewer>> GetLandViewer() const = 0;
-    virtual Result<MinerStatus> CheckStatus() const = 0;
+    virtual Result<MinerStatus> GetStatus() const = 0;
 };
 
 namespace miner {

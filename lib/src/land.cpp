@@ -110,26 +110,6 @@ SquareLand::GetNeighborsMineCount(const Location & location) const
     return _cell[location.y][location.x].neighbors_mine_count;
 }
 
-// Result<CellView>
-// SquareLand::View(const Location & location) const
-// {
-//     VALUE_OR_RETURN(ValidateLocation(location));
-//     const auto & viewed_cell = _cell[location.y][location.x];
-//     if (viewed_cell.dig) {
-//         return CellView {
-//             .digged = viewed_cell.dig,
-//             .has_mine = viewed_cell.mine,
-//             .neighbors_mine_count = viewed_cell.neighbors_mine_count,
-//         };
-//     } else {
-//         return CellView {
-//             .digged = viewed_cell.dig,
-//             .has_mine = false,
-//             .neighbors_mine_count = 0,
-//         };
-//     }
-// }
-
 Result<std::unique_ptr<LocationViewer>>
 SquareLand::GetAllLocations() const
 {
