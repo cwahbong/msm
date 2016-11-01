@@ -15,6 +15,7 @@ struct MSM_EXPORT Location {
     Axis x, y;
 
     Location(): x(0), y(0) {}
+    Location(Axis _x, Axis _y): x(_x), y(_y) {}
 };
 
 inline bool operator==(const Location & lhs, const Location & rhs)

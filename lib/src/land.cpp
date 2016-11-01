@@ -36,6 +36,7 @@ public:
 
 private:
     Result<Void> ValidateLocation(const Location & location) const;
+    void TryAddNeighborCount(const Location & location);
 
     Size _row;
     Size _col;
@@ -62,7 +63,12 @@ SquareLand::SetMine(const Location & location, bool is_mine)
 {
     VALUE_OR_RETURN(ValidateLocation(location));
     _cell[location.y][location.x].mine = is_mine;
-    // TODO update neighbor count
+    for (int z = 0; z < 2; ++z) {
+        TryAddNeighborCount(Location(location.x - 1 + z, location.y - 1)); // top
+        TryAddNeighborCount(Location(location.x + 1, location.y - 1 + z)); // right
+        TryAddNeighborCount(Location(location.x + 1 - z, location.y + 1)); // bottom
+        TryAddNeighborCount(Location(location.x - 1, location.y + 1 - z)); // left
+    }
     return VOID;
 }
 
@@ -130,6 +136,15 @@ SquareLand::ValidateLocation(const Location & location) const
         return Error::BAD_PARAMETER;
     }
     return VOID;
+}
+
+void
+SquareLand::TryAddNeighborCount(const Location & location)
+{
+    if (ValidateLocation(location).IsError()) {
+        return;
+    }
+    _cell[location.y][location.x].neighbors_mine_count += 1;
 }
 
 } // namespace
