@@ -5,6 +5,7 @@
 #include <msm/agent.h>
 #include <msm/land.h>
 #include <msm/land_viewer.h>
+#include <msm/location_range.h>
 #include <msm/miner.h>
 #include <msm/observer.h>
 #include <msm/runner.h>
@@ -29,6 +30,10 @@ public:
     msm::Action GenAction(const msm::LandViewer &) noexcept override;
 
 private:
+    std::string EmptyCellString() const;
+    std::string LandCellString(const msm::Result<msm::CellView> & cellView) const;
+    void PrintLand(const msm::LandViewer & landViewer) const;
+
     std::istream & _is;
     std::ostream & _os;
 };
@@ -66,6 +71,61 @@ SquareTui::GenAction(const msm::LandViewer &) noexcept
             };
         }
         // TODO parse line
+    }
+}
+
+std::string
+SquareTui::EmptyCellString() const
+{
+    return " ";
+}
+
+std::string
+SquareTui::LandCellString(const msm::Result<msm::CellView> & cellViewResult) const
+{
+    if (cellViewResult.IsError()) {
+        return "!";
+    }
+    const msm::CellView cellView = cellViewResult.GetValue();
+    if (cellView.has_mine) {
+        return "*";
+    }
+    if (cellView.digged) {
+        if (cellView.neighbors_mine_count == 0) {
+            return " ";
+        } else {
+            return std::string(1, '0' + cellView.neighbors_mine_count % 10);
+        }
+    }
+    if (cellView.flagged) {
+        return "F";
+    }
+    return "O";
+}
+
+void
+SquareTui::PrintLand(const msm::LandViewer & landViewer) const
+{
+    auto result = landViewer.GetAllLocations();
+    if (result.IsError()) {
+        // LOG
+        return;
+    }
+    const auto locations = result.GetValue();
+    msm::Location prev(-1, -1);
+    for (const auto & location: *locations) {
+        if (prev.y < location.y) {
+            prev.x = 0;
+            do {
+                prev.y += 1;
+                _os << std::endl;
+            } while (prev.y < location.y);
+        }
+        while (prev.x + 1 < location.x) {
+            prev.x += 1;
+            _os << EmptyCellString();
+        }
+        _os << LandCellString(landViewer.View(location));
     }
 }
 
