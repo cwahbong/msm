@@ -31,6 +31,9 @@ public:
     template <typename = std::enable_if<std::is_move_constructible<ValueType>::value>>
     Result(ValueType && value) noexcept(std::is_nothrow_move_constructible<ValueType>::value): _isError(false), _value(std::move(value)) {}
 
+    template <typename U, typename = std::enable_if<std::is_convertible<U, ValueType>::value>>
+    Result(U && other) noexcept: _isError(false), _value(std::move(other)) {}
+
     Result(const ErrorType & error) noexcept: _isError(true), _error(error) {}
 
     Result(ErrorType && error) noexcept: _isError(true), _error(std::move(error)) {}

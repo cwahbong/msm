@@ -1,5 +1,7 @@
 #include "msm/land.h"
 
+#include "msm/location_range.h"
+
 #include <vector>
 
 namespace msm {
@@ -13,12 +15,62 @@ struct Cell {
     Size neighbors_mine_count;
 };
 
+class SquareLocationRange: public LocationRange {
+public:
+    SquareLocationRange(Size row, Size col);
+    ~SquareLocationRange() override;
+
+    Location BeginLocation() const override;
+    Location EndLocation() const override;
+    Location NextLocation(const Location &) const override;
+
+private:
+    Size _row;
+    Size _col;
+};
+
+SquareLocationRange::SquareLocationRange(Size row, Size col):
+    LocationRange(),
+    _row(row),
+    _col(col)
+{}
+
+SquareLocationRange::~SquareLocationRange() = default;
+
+Location
+SquareLocationRange::BeginLocation() const
+{
+    return Location(0, 0);
+}
+
+Location
+SquareLocationRange::EndLocation() const
+{
+    return Location(-1, -1);
+}
+
+Location
+SquareLocationRange::NextLocation(const Location & location) const
+{
+    if (location.x < 0 || location.y < 0) {
+        return EndLocation();
+    }
+    const Size x = location.x;
+    const Size y = location.y;
+    if (x == _col) {
+        if (y == _row) {
+            return EndLocation();
+        } else {
+            return Location(0, y + 1);
+        }
+    }
+    return Location(location.x + 1, location.y);
+}
+
 class SquareLand: public Land {
 public:
     SquareLand(Size row, Size col);
     virtual ~SquareLand();
-
-    Result<Void> SetNeighbor(const Location & location1, const Location & location2) override;
 
     Result<Void> SetMine(const Location & location, bool isMine) override;
     Result<bool> HasMine(const Location & location) const override;
@@ -30,9 +82,7 @@ public:
     Result<bool> IsDigged(const Location & location) const override;
 
     Result<Size> GetNeighborsMineCount(const Location & location) const override;
-
-    Result<std::unique_ptr<LocationViewer>> GetAllLocations() const override;
-    Result<std::unique_ptr<LocationViewer>> GetNeighbors(const Location & location) const override;
+    Result<std::unique_ptr<LocationRange>> GetAllLocations() const override;
 
 private:
     Result<Void> ValidateLocation(const Location & location) const;
@@ -51,12 +101,6 @@ SquareLand::SquareLand(Size row, Size col):
 {}
 
 SquareLand::~SquareLand() = default;
-
-Result<Void>
-SquareLand::SetNeighbor(const Location &, const Location &)
-{
-    return Error::NOT_SUPPORTED;
-}
 
 Result<Void>
 SquareLand::SetMine(const Location & location, bool is_mine)
@@ -116,16 +160,10 @@ SquareLand::GetNeighborsMineCount(const Location & location) const
     return _cell[location.y][location.x].neighbors_mine_count;
 }
 
-Result<std::unique_ptr<LocationViewer>>
+Result<std::unique_ptr<LocationRange>>
 SquareLand::GetAllLocations() const
 {
-    // TODO
-}
-
-Result<std::unique_ptr<LocationViewer>>
-SquareLand::GetNeighbors(const Location & location) const
-{
-    // TODO
+    return std::make_unique<SquareLocationRange>(_row, _col);
 }
 
 Result<Void>

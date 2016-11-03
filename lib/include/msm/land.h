@@ -9,19 +9,11 @@
 
 namespace msm {
 
-class MSM_EXPORT LocationViewer {
-public:
-    virtual ~LocationViewer() = 0;
-
-    virtual Result<Location> Next() = 0;
-    virtual Result<bool> End() = 0;
-};
+class LocationRange;
 
 class MSM_EXPORT Land {
 public:
     virtual ~Land() = 0;
-
-    virtual Result<Void> SetNeighbor(const Location & location1, const Location & location2) = 0;
 
     virtual Result<Void> SetMine(const Location & location, bool isMine) = 0;
     virtual Result<bool> HasMine(const Location & location) const = 0;
@@ -33,8 +25,7 @@ public:
     virtual Result<bool> IsDigged(const Location & location) const = 0;
 
     virtual Result<Size> GetNeighborsMineCount(const Location & location) const = 0;
-    virtual Result<std::unique_ptr<LocationViewer>> GetAllLocations() const = 0;
-    virtual Result<std::unique_ptr<LocationViewer>> GetNeighbors(const Location & location) const = 0;
+    virtual Result<std::unique_ptr<LocationRange>> GetAllLocations() const = 0;
 };
 
 namespace land {

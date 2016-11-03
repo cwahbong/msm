@@ -10,7 +10,7 @@
 namespace msm {
 
 class Land;
-class LocationViewer;
+class LocationRange;
 
 struct CellView {
     bool digged;
@@ -24,7 +24,7 @@ public:
     virtual ~LandViewer() = 0;
 
     virtual Result<CellView> View(const Location & location) const = 0;
-    virtual Result<std::unique_ptr<LocationViewer>> GetAllLocations() const = 0;
+    virtual Result<std::unique_ptr<LocationRange>> GetAllLocations() const = 0;
 };
 
 namespace land_viewer {

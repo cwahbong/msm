@@ -1,6 +1,7 @@
 #include "msm/land_viewer.h"
 
 #include "msm/land.h"
+#include "msm/location_range.h"
 
 namespace msm {
 
@@ -12,13 +13,14 @@ public:
     ~LandViewerImpl() override;
 
     Result<CellView> View(const Location & location) const override;
-    Result<std::unique_ptr<LocationViewer>> GetAllLocations() const override;
+    Result<std::unique_ptr<LocationRange>> GetAllLocations() const override;
 
 private:
     const Land & _land;
 };
 
 LandViewerImpl::LandViewerImpl(const Land & land):
+    LandViewer(),
     _land(land)
 {}
 
@@ -42,7 +44,7 @@ LandViewerImpl::View(const Location & location) const
         };
 }
 
-Result<std::unique_ptr<LocationViewer>>
+Result<std::unique_ptr<LocationRange>>
 LandViewerImpl::GetAllLocations() const
 {
     return _land.GetAllLocations();
